@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>파일 업로드</title>
+    <style>
+        #preview {
+            margin-top: 20px;
+        }
+        #preview img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+<h2>파일 업로드</h2>
+<form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="file" name="file" accept="image/*">
+    <button type="button" onclick="uploadFile()">업로드</button>
+</form>
+<div id="preview"></div>
+<script>
+    function uploadFile() {
+        const formData = new FormData(document.getElementById('uploadForm'));
+        const fileInput = document.getElementById('file');
+        if (fileInput.files.length === 0) {
+            alert('파일을 선택해주세요.');
+            return;
+        }
+        fetch('https://646d-118-34-210-62.ngrok-free.app/upload_test', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data['product_type'].toString());
+                // 수정된 부분: 분석 서버에서 받은 결과를 컨트롤러로 전송
+                return fetch('/api/product_type', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ product_type: data['product_type'].toString() })
+                });
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('컨트롤러 응답:', data);
+            })
+            .catch(error => {
+                console.error('오류 발생:', error);
+                alert('오류 발생: ' + error.message);
+            });
+    }
+</script>
+</body>
+</html>

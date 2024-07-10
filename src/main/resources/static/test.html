@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <h1>PCB 제품 분류 및 양품 판별 </h1>
+    <title>파일 업로드</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #uploadForm {
+            width: 300px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #preview img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+<div id="uploadForm">
+    <h2>파일 업로드</h2>
+    <form id="form" enctype="multipart/form-data">
+        <input type="file" id="file" name="file" accept="image/*">
+        <br><br>
+        <button type="button" onclick="uploadFile()">업로드</button>
+    </form>
+    <div id="preview"></div>
+    <div id="result"></div>
+</div>
+
+<script>
+    function uploadFile() {
+        const formData = new FormData(document.getElementById('form'));
+        const fileInput = document.getElementById('file');
+        if (fileInput.files.length === 0) {
+            alert('파일을 선택해주세요.');
+            return;
+        }
+        fetch('https://646d-118-34-210-62.ngrok-free.app/upload_test', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('서버에서 받은 데이터:', data);
+
+                // 미리보기 생성
+                const previewDiv = document.getElementById('preview');
+                previewDiv.innerHTML = ''; // 기존 내용 초기화
+
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(fileInput.files[0]);
+                img.onload = function() {
+                    URL.revokeObjectURL(this.src); // 메모리 해제
+                };
+                previewDiv.appendChild(img);
+
+                // 결과 출력
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `<p>서버에서 받은 데이터: ${JSON.stringify(data)}</p>`;
+            })
+            .catch(error => {
+                console.error('오류 발생:', error);
+                alert('오류 발생: ' + error.message);
+            });
+    }
+</script>
+</body>
+</html>
