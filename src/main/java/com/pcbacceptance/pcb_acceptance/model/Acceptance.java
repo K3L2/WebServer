@@ -3,6 +3,7 @@ package com.pcbacceptance.pcb_acceptance.model;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,8 @@ import lombok.NoArgsConstructor;
 @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Acceptance {
 
+    @Size(min = 1, max = 2)
     @NotEmpty
     String productType;
+
 }
