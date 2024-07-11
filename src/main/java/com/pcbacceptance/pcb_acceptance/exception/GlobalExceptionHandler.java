@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = {Exception.class})
-    //예측하지 못하는 예외들을 잡는 최후의 보루이기 때문에 최상위 클래시인 Exception으로 선언
+    //예측하지 못하는 예외들을 잡는 최후의 보루이기 때문에 최상위 클래스인 Exception으로 선언
     public ResponseEntity<Api> exception(
             Exception e
     ){
