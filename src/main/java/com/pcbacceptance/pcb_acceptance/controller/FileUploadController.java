@@ -1,13 +1,20 @@
 package com.pcbacceptance.pcb_acceptance.controller;
 
+import org.apache.tomcat.util.http.fileupload.ByteArrayOutputStream;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -82,4 +89,6 @@ public class FileUploadController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+
 }

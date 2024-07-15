@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor //기본생성자 만들어줌
 @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Acceptance {
-
     @NotEmpty
     String productType;
 }
