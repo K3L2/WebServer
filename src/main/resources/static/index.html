@@ -2,26 +2,25 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>PCB 제품 분류 및 양품 판별</title>
+    <title>파일 업로드</title>
     <style>
         body {
             margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
-            font-family: Arial, sans-serif;
+            height: 100vh;
         }
         #name {
-            background-color: gray;
-            color: black;
+            background-color: gray; /* 제목 부분의 배경색 설정 */
+            color: black; /* 제목 글자색 설정 */
             padding: 20px;
-            width: 100%;
-            text-align: center;
+            width: 100%; /* 제목이 화면의 전체 너비를 차지하도록 설정 */
+            text-align: center; /* 제목 텍스트를 가운데 정렬 */
             position: fixed;
             top: 0;
             left: 0;
-            z-index: 1000;
+            z-index: 1000; /* 다른 요소들보다 위에 오도록 설정 */
         }
         #content {
             display: flex;
@@ -29,13 +28,12 @@
             align-items: center;
             flex: 1;
             width: 100%;
-            margin-top: 80px;
+            margin-top: 80px; /* 제목 높이 만큼 margin 추가 */
             padding: 20px;
             box-sizing: border-box;
         }
         #uploadForm {
-            width: 80%;
-            max-width: 800px;
+            width: 300px;
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -43,44 +41,18 @@
             background-color: #f9f9f9;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        #result-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+        #preview {
             margin-top: 20px;
+            text-align: center;
+            position: relative;
         }
-        .image-box {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .image-container {
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #ccc;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-        .image-container img {
+        #preview img {
             max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            height: auto;
         }
-        .image-label {
-            font-weight: bold;
-            margin-top: 5px;
-        }
-        #downloadLink {
-            margin-top: 20px;
-            display: none;
-        }
-        #result {
-            margin-top: 20px;
-            text-align: left;
+        .checkbox-overlay {
+            position: absolute;
+            border: 2px solid red;
         }
     </style>
 </head>
@@ -94,68 +66,65 @@
             <br><br>
             <button type="button" onclick="uploadFile()">업로드</button>
         </form>
-        <div id="result-container">
-            <div id="original-image" class="image-box">
-                <div class="image-container"></div>
-                <div class="image-label">분석 전</div>
-            </div>
-            <div id="processed-image" class="image-box">
-                <div class="image-container"></div>
-                <div class="image-label">분석 후</div>
-            </div>
-        </div>
+        <div id="preview"></div>
         <div id="result"></div>
-        <div id="downloadLink"></div>
     </div>
 </div>
+
 <script>
     function uploadFile() {
+        const formData = new FormData(document.getElementById('form'));
         const fileInput = document.getElementById('file');
         if (fileInput.files.length === 0) {
             alert('파일을 선택해주세요.');
             return;
         }
-
-        const file = fileInput.files[0];
-        const formData = new FormData(document.getElementById('form'));
-
-        // 원본 이미지 표시
-        const originalImageDiv = document.getElementById('original-image').querySelector('.image-container');
-        const originalImg = document.createElement('img');
-        originalImg.src = URL.createObjectURL(file);
-        originalImageDiv.innerHTML = '';
-        originalImageDiv.appendChild(originalImg);
-
-        // 다운로드 링크 생성
-        const downloadLinkDiv = document.getElementById('downloadLink');
-        const link = document.createElement('a');
-        link.href = originalImg.src;
-        link.download = file.name;
-        link.textContent = '원본 이미지 다운로드';
-        downloadLinkDiv.innerHTML = '';
-        downloadLinkDiv.appendChild(link);
-        downloadLinkDiv.style.display = 'block';
-
-        // 서버에 업로드
-        fetch('https://0247-118-34-210-82.ngrok-free.app/predict', {
+        fetch('https://4c73-118-34-210-90.ngrok-free.app/predict', {
             method: 'POST',
-            mode: 'cors',
             body: formData
         })
             .then(response => response.json())
             .then(data => {
                 console.log('서버에서 받은 데이터:', data);
 
-                // 처리된 이미지 표시 (서버에서 이미지 URL을 반환한다고 가정)
-                const processedImageDiv = document.getElementById('processed-image').querySelector('.image-container');
-                const processedImg = document.createElement('img');
-                processedImg.src = data.processedImageUrl; // 서버에서 반환한 처리된 이미지 URL
-                processedImageDiv.innerHTML = '';
-                processedImageDiv.appendChild(processedImg);
+                // 미리보기 생성
+                const previewDiv = document.getElementById('preview');
+                previewDiv.innerHTML = ''; // 기존 내용 초기화
+
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(fileInput.files[0]);
+                img.onload = function() {
+                    URL.revokeObjectURL(this.src); // 메모리 해제
+
+                    // 이미지 크기 가져오기
+                    const imgWidth = this.naturalWidth;
+                    const imgHeight = this.naturalHeight;
+
+                    // 체크박스 오버레이 생성
+                    data.checkboxCoordinates.forEach(coord => {
+                        const [x1, y1, x2, y2] = coord;
+
+                        const overlay = document.createElement('div');
+                        overlay.classList.add('checkbox-overlay');
+
+                        // 좌표를 이미지 크기에 맞게 조정
+                        const left = (x1 / imgWidth) * 100;
+                        const top = (y1 / imgHeight) * 100;
+                        const width = ((x2 - x1) / imgWidth) * 100;
+                        const height = ((y2 - y1) / imgHeight) * 100;
+
+                        overlay.style.left = left + '%';
+                        overlay.style.top = top + '%';
+                        overlay.style.width = width + '%';
+                        overlay.style.height = height + '%';
+                        previewDiv.appendChild(overlay);
+                    });
+                };
+                previewDiv.appendChild(img);
 
                 // 결과 출력
                 const resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = `<p>서버 응답: ${JSON.stringify(data)}</p>`;
+                resultDiv.innerHTML = `<p>서버에서 받은 데이터: ${JSON.stringify(data)}</p>`;
             })
             .catch(error => {
                 console.error('오류 발생:', error);
@@ -165,3 +134,4 @@
 </script>
 </body>
 </html>
+
