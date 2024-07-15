@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/api")
-public class ResponseController {
+public class ResponseProductTypeController {
 
     @PostMapping("/response")
     public ResponseEntity<Acceptance> returnProductType(
