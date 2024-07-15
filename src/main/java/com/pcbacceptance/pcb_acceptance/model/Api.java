@@ -21,6 +21,7 @@ public class Api <T>{
 
     @Valid
     private T data;
+    @Valid
     private Error error;
 
     @Data
