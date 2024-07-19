@@ -89,10 +89,11 @@
         }
         .check-box {
             position: absolute;
-            width: 10px;
-            height: 10px;
             background-color: transparent;
             border: 2px solid lightgreen;
+            width: 10px;
+            height: 10px;
+
         }
         .check-box-label {
             position: absolute;
@@ -100,6 +101,25 @@
             color: red;
             font-weight: 500;
             transform: translate(-50%, -20px);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            text-align: center;
         }
     </style>
 </head>
@@ -112,6 +132,7 @@
             <input type="file" id="file" name="file" accept="image/*">
             <br><br>
             <button type="button" onclick="uploadFile()">업로드</button>
+            <button type="button" onclick="downloadFile()">다운로드</button>
         </form>
         <div id="result-container">
             <div id="original-image" class="image-box">
@@ -127,6 +148,13 @@
         <div id="downloadLink"></div>
     </div>
 </div>
+
+<div id="loadingModal" class="modal">
+    <div class="modal-content">
+        <p>처리중입니다...</p>
+    </div>
+</div>
+
 <script>
     function uploadFile() {
         const fileInput = document.getElementById('file');
@@ -145,52 +173,10 @@
         originalImageDiv.innerHTML = '';
         originalImageDiv.appendChild(originalImg);
 
-        // 다운로드 링크 생성
-        const downloadLinkDiv = document.getElementById('downloadLink');
-        const link = document.createElement('a');
-        link.href = originalImg.src;
-        link.download = file.name;
-        link.textContent = '원본 이미지 다운로드';
-        downloadLinkDiv.innerHTML = '';
-        downloadLinkDiv.appendChild(link);
-        downloadLinkDiv.style.display = 'block';
+        // 모달 표시
+        document.getElementById('loadingModal').style.display = 'block';
 
-        // 처리된 이미지 표시
-        const processedImageDiv = document.getElementById('processed-image').querySelector('.image-container');
-        processedImageDiv.innerHTML = '';
-
-        const processedImg = document.createElement('img');
-        processedImg.src = '/testIMG2.jpg';  // 정적 리소스 경로 사용
-        processedImg.onerror = function() {
-            console.error('이미지 로드 실패:', this.src);
-            this.src = '/static/testIMG2.jpg';  // 대체 경로 시도
-        };
-
-        processedImageDiv.appendChild(processedImg);
-
-        // 초록 네모와 텍스트 추가
-        const coordinates = [
-            { x1: 240.54519653320312, y1: 136.817138671875, x2: 245.6338653564453, y2: 145.1270751953125, label: 'mouse_bite_0.87' },
-            { x1: 115.35466003417969, y1: 108.51517486572266, x2: 123.11701965332031, y2: 114.64930725097656, label: 'mouse_bite_0.87' }
-        ];
-
-        coordinates.forEach(coord => {
-            const checkBox = document.createElement('div');
-            checkBox.className = 'check-box';
-            checkBox.style.left = `${coord.x1}px`;
-            checkBox.style.top = `${coord.y1}px`;
-
-            const checkBoxLabel = document.createElement('div');
-            checkBoxLabel.className = 'check-box-label';
-            checkBoxLabel.style.left = `${(coord.x1 + coord.x2) / 2}px`;
-            checkBoxLabel.style.top = `${coord.y1}px`;
-            checkBoxLabel.textContent = coord.label;
-
-            processedImageDiv.appendChild(checkBox);
-            processedImageDiv.appendChild(checkBoxLabel);
-        });
-
-        // 서버에 업로드 (선택적)
+        // 서버에 업로드
         fetch('https://c1e1-118-34-210-68.ngrok-free.app/predict', {
             method: 'POST',
             mode: 'cors',
@@ -203,11 +189,65 @@
                 // 결과 출력
                 const resultDiv = document.getElementById('result');
                 resultDiv.innerHTML = `<p>서버 응답: ${JSON.stringify(data)}</p>`;
+
+                // 처리된 이미지 표시
+                const processedImageDiv = document.getElementById('processed-image').querySelector('.image-container');
+                processedImageDiv.innerHTML = '';
+
+                const processedImg = document.createElement('img');
+                processedImg.src = '/testIMG1.jpg';  // 정적 리소스 경로 사용
+                processedImg.onerror = function() {
+                    console.error('이미지 로드 실패:', this.src);
+                    this.src = '/static/testIMG1.jpg';  // 대체 경로 시도
+                };
+
+                processedImageDiv.appendChild(processedImg);
+
+                // 초록 네모와 텍스트 추가
+                const coordinates = [
+                    { x1: 240.54519653320312, y1: 136.817138671875, x2: 245.6338653564453, y2: 145.1270751953125, label: 'mouse_bite_0.87' },
+                    { x1: 115.35466003417969, y1: 108.51517486572266, x2: 123.11701965332031, y2: 114.64930725097656, label: 'mouse_bite_0.87' }
+                ];
+
+                coordinates.forEach(coordinates => {
+                    const checkBox = document.createElement('div');
+                    checkBox.className = 'check-box';
+                    checkBox.style.left = `${coordinates.x1}px`;
+                    checkBox.style.top = `${coordinates.y1}px`;
+
+                    const checkBoxLabel = document.createElement('div');
+                    checkBoxLabel.className = 'check-box-label';
+                    checkBoxLabel.style.left = `${(coordinates.x1 + coordinates.x2) / 2}px`;
+                    checkBoxLabel.style.top = `${coordinates.y1}px`;
+                    checkBoxLabel.textContent = coordinates.label;
+
+                    processedImageDiv.appendChild(checkBox);
+                    processedImageDiv.appendChild(checkBoxLabel);
+                });
             })
             .catch(error => {
                 console.error('오류 발생:', error);
                 alert('오류 발생: ' + error.message);
+            })
+            .finally(() => {
+                // 모달 숨기기
+                document.getElementById('loadingModal').style.display = 'none';
             });
+    }
+
+    function downloadFile() {
+        // 다운로드 링크 생성
+        const link = document.createElement('a');
+
+        // 웹 서버의 정적 리소스 경로로 수정
+        link.href = '/static/testIMG1-checkbox.jpg';
+
+        link.download = 'testIMG1-checkbox.jpg';
+
+        // 링크를 클릭하여 다운로드 시작
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 </body>
